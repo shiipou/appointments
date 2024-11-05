@@ -1,8 +1,11 @@
 package fr.simplon.appointments.model;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,4 +20,6 @@ public class User {
 
   private String username;
 
+  @ManyToMany(mappedBy = "invitee")
+  private List<Event> events;
 }

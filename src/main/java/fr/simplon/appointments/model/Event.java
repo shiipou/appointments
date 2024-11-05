@@ -6,6 +6,10 @@ import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,7 +26,10 @@ public class Event {
 
   private String title;
 
+  @ManyToOne
   private User owner;
 
+  @ManyToMany
+  @JoinTable(name = "events_users", joinColumns = @JoinColumn(name = "event_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
   private List<User> invitee;
 }

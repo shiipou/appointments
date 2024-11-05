@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: Appointments
+  datasource:
+    url: jdbc:postgresql://localhost:5432/app
+    username: postgres
+    password: postgres
+  jpa:
+    database: postgresql
+    show-sql: true
+    hibernate:
+      ddl-auto: update

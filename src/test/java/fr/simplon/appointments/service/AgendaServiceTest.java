@@ -1,6 +1,7 @@
 package fr.simplon.appointments.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -31,7 +32,7 @@ public class AgendaServiceTest {
   private AgendaService agendaService;
 
   @Test
-  public void createEvent() {
+  public void createEvent() throws CloneNotSupportedException {
 
     // Premier paramètre
     long idUser = 1;
@@ -61,7 +62,7 @@ public class AgendaServiceTest {
         .build();
 
     // Mock Create event
-    Event eventDb = Event.builder()
+    Event eventFromDB = Event.builder()
         .id(1L)
         .owner(user)
         .title(title)
@@ -69,7 +70,7 @@ public class AgendaServiceTest {
         .invitee(List.of(invitee1, invitee2))
         .build();
 
-    when(eventRepository.save(eventDb)).thenReturn(eventDb);
+    when(eventRepository.save(any(Event.class))).thenReturn(eventFromDB);
 
     // Execution du code de l'app
     Event event = agendaService.createEvent(idUser, date, title, List.of(invitee1, invitee2));
