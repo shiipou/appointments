@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 
 import fr.simplon.appointments.model.Event;
 import fr.simplon.appointments.model.User;
-import fr.simplon.repository.EventRepository;
-import fr.simplon.repository.UserRepository;
+import fr.simplon.appointments.repository.EventRepository;
+import fr.simplon.appointments.repository.UserRepository;
 
 @Service
 public class AgendaService {

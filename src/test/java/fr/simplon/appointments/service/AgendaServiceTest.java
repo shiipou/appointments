@@ -15,8 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import fr.simplon.appointments.model.Event;
 import fr.simplon.appointments.model.User;
-import fr.simplon.repository.EventRepository;
-import fr.simplon.repository.UserRepository;
+import fr.simplon.appointments.repository.EventRepository;
+import fr.simplon.appointments.repository.UserRepository;
 import fr.simplon.service.AgendaService;
 
 @SpringBootTest
@@ -32,7 +32,7 @@ public class AgendaServiceTest {
   private AgendaService agendaService;
 
   @Test
-  public void createEvent() throws CloneNotSupportedException {
+  public void createEventMultipleInvitee() {
 
     // Premier paramètre
     long idUser = 1;
