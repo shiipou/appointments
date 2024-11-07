@@ -15,6 +15,12 @@ jobs:
   check-title:
     name: Check PR Title
     runs-on: ubuntu-latest
+    outputs:
+      is-wip: ${{ steps.pr-check.outputs.wip }}
+      type: ${{ steps.pr-check.outputs.type }}
+      scope: ${{ steps.pr-check.outputs.scope }}
+      is-breaking: ${{ steps.pr-check.outputs.breaking }}
+      message: ${{ steps.pr-check.outputs.message }}
     steps:
       - name: Set to Ready for Review
         uses: actions/github-script@v7
@@ -22,9 +28,11 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            //TODO!: When set_pr_ready event is triggered, rename the PR to remove the WIP prefix, and remove the draft state.
             console.log(JSON.stringify(context))
 
-      - name: Check PR Title
+      - id: pr-check
+        name: Check PR Title
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,3 +95,39 @@ jobs:
             }
 
             github.rest.checks.update(results)
+
+            return { wip, type, scope, breaking, message }
+
+  buildJava:
+    needs: check-title
+    if: needs.check-title.outputs.is-wip != 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build with Gradle
+        run: ./gradlew bootjar
+
+  testJava:
+    needs: check-title
+    if: needs.check-title.outputs.is-wip != 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build with Gradle
+        run: ./gradlew test
