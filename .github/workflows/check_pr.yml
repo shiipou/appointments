@@ -100,7 +100,7 @@ jobs:
 
   buildJava:
     needs: check-title
-    if: needs.check-title.outputs.is-wip != 'false'
+    if: needs.check-title.outputs.is-wip != false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -117,7 +117,7 @@ jobs:
 
   testJava:
     needs: check-title
-    if: needs.check-title.outputs.is-wip != 'false'
+    if: needs.check-title.outputs.is-wip != false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
