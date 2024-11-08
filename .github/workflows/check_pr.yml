@@ -16,11 +16,11 @@ jobs:
     name: Check PR Title
     runs-on: ubuntu-latest
     outputs:
-      is-wip: ${{ steps.pr-check.outputs.result.wip }}
-      type: ${{ steps.pr-check.outputs.result.type }}
-      scope: ${{ steps.pr-check.outputs.result.scope }}
-      is-breaking: ${{ steps.pr-check.outputs.result.breaking }}
-      message: ${{ steps.pr-check.outputs.result.message }}
+      is-wip: ${{ fromJSON(steps.pr-check.outputs.result).wip }}
+      type: ${{ fromJSON(steps.pr-check.outputs.result).type }}
+      scope: ${{ fromJSON(steps.pr-check.outputs.result).scope }}
+      is-breaking: ${{ fromJSON(steps.pr-check.outputs.result).breaking }}
+      message: ${{ fromJSON(steps.pr-check.outputs.result).message }}
     steps:
       - name: Set to Ready for Review
         uses: actions/github-script@v7
