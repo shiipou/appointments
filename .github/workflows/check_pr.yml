@@ -1,0 +1,133 @@
+name: Check PR
+
+on:
+  pull_request:
+    types: [ opened, reopened, ready_for_review, synchronize, edited, converted_to_draft ]
+  pull_request_target:
+    types: [ opened, reopened, ready_for_review, synchronize, edited, converted_to_draft ]
+  check_run:
+    types: [ requested_action ]
+
+permissions:
+  checks: write
+
+jobs:
+  check-title:
+    name: Check PR Title
+    runs-on: ubuntu-latest
+    outputs:
+      is-wip: ${{ fromJSON(steps.pr-check.outputs.result).wip }}
+      type: ${{ fromJSON(steps.pr-check.outputs.result).type }}
+      scope: ${{ fromJSON(steps.pr-check.outputs.result).scope }}
+      is-breaking: ${{ fromJSON(steps.pr-check.outputs.result).breaking }}
+      message: ${{ fromJSON(steps.pr-check.outputs.result).message }}
+    steps:
+      - name: Set to Ready for Review
+        uses: actions/github-script@v7
+        if: github.event.requested_action.identifier == 'set_pr_ready'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            //TODO!: When set_pr_ready event is triggered, rename the PR to remove the WIP prefix, and remove the draft state.
+            console.log(JSON.stringify(context))
+
+      - id: pr-check
+        name: Check PR Title
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const conv_co_types = ["build", "ci", "docs", "style", "refactor", "test", "chore", "fix", "perf", "feat"]
+            const owner = context.payload.repository.owner.login
+            const repo = context.payload.repository.name
+            const pull_number = context.payload.pull_request.number
+            const head_sha = context.payload.pull_request.head.sha
+
+            const run_check_promise = github.rest.checks.create({
+              owner,
+              repo,
+              head_sha,
+              name: "Check PR Title",
+              status: "in_progress",
+              output: {
+                title: "Check PR Title",
+                summary: "Check is Running..."
+              }
+            })
+            const pr = context.payload.pull_request
+
+            const conv_co_regex = /^\(?(WIP)?\)?:? *(\w+)(?:\((\w+)\))?(!)?: ?(.+)$/mgi
+            const [_, wip_chars, type, scope, breaking_changes_char, message] = conv_co_regex.exec(pr.title)
+            const wip = wip_chars?.length > 0
+            const breaking = breaking_changes_char?.length > 0
+
+            run_check = await run_check_promise
+
+            const results = {
+              owner,
+              repo,
+              check_run_id: run_check.data.id,
+              output: {
+                title: "Check PR Title",
+                summary: ""
+              }
+            }
+
+            if(wip || pr.draft) {
+                results.output.title = "PR is WIP"
+                results.output.summary = "Your PR is in a WIP state, before your need to merge your changes, you'll need to set your PR as `Ready to Review`."
+                results.conclusion = "action_required"
+                results.actions = [{
+                  label: "Ready to review ?",
+                  description: "Set the PR state to ready to review.",
+                  identifier: "set_pr_ready"
+                }]
+            } else {
+              if(type && conv_co_types.includes(type)) {
+                results.output.title = "Ready to review"
+                results.output.summary = `Your PR is ready to review, you can now assign someone to review your code.`
+                results.conclusion = "success"
+              } else {
+                results.output.title = "Invalid PR Title"
+                results.output.summary = `You need to set one of ${conv_co_types.join(', ')} types in your PR title. Following the [Conventional Commits Rules](https://www.conventionalcommits.org/en/v1.0.0/).`
+                results.conclusion = "action_required"
+              }
+            }
+
+            github.rest.checks.update(results)
+
+            return { wip, type, scope, breaking, message }
+
+  buildJava:
+    needs: check-title
+    if: needs.check-title.outputs.is-wip != false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build with Gradle
+        run: ./gradlew bootjar
+
+  testJava:
+    needs: check-title
+    if: needs.check-title.outputs.is-wip != false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: "temurin"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build with Gradle
+        run: ./gradlew test
